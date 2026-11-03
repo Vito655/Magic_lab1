@@ -1,45 +1,44 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { TemperatureSensor } from './entities/temperature-sensor.entity';
 import { CreateTemperatureSensorDto } from './dto/create-temperature-sensor.dto';
 import { UpdateTemperatureSensorDto } from './dto/update-temperature-sensor.dto';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class TemperatureSensorsService {
-  private sensors: TemperatureSensor[] = [];
+  constructor(
+    @InjectRepository(TemperatureSensor)
+    private readonly temperatureSensorRepository: Repository<TemperatureSensor>,
+  ) {}
 
-create(createSensorDto: CreateTemperatureSensorDto): TemperatureSensor {
-  const sensor: TemperatureSensor = {
-    id: uuidv4(),
-    timestamp: new Date(),
-    createdAt: new Date(),
-    ...createSensorDto,
-  };
-  this.sensors.push(sensor);
-  return sensor;
-}
-
-
-  findAll(): TemperatureSensor[] {
-    return this.sensors;
+  async create(createSensorDto: CreateTemperatureSensorDto): Promise<TemperatureSensor> {
+    // TypeORM створить сутність з урахуванням переданого timestamp (якщо він є) 
+    // та автоматично згенерує id та createdAt
+    const sensor = this.temperatureSensorRepository.create(createSensorDto);
+    return await this.temperatureSensorRepository.save(sensor);
   }
 
-  findOne(id: string): TemperatureSensor {
-    const sensor = this.sensors.find((s) => s.id === id);
+  async findAll(): Promise<TemperatureSensor[]> {
+    return await this.temperatureSensorRepository.find();
+  }
+
+  async findOne(id: string): Promise<TemperatureSensor> {
+    const sensor = await this.temperatureSensorRepository.findOne({ where: { id } });
     if (!sensor) {
-      throw new NotFoundException(`sensor with id ${id} not found`);
+      throw new NotFoundException(`Sensor with id ${id} not found`);
     }
     return sensor;
   }
 
-  update(id: string, updateSensorDto: UpdateTemperatureSensorDto): TemperatureSensor {
-    const sensor = this.findOne(id);
-    Object.assign(sensor, updateSensorDto);
-    return sensor;
+  async update(id: string, updateSensorDto: UpdateTemperatureSensorDto): Promise<TemperatureSensor> {
+    await this.findOne(id); // Перевіряємо, чи існує запис перед оновленням
+    await this.temperatureSensorRepository.update(id, updateSensorDto);
+    return await this.findOne(id);
   }
 
-  remove(id: string): void {
-    const sensor = this.findOne(id);
-    this.sensors = this.sensors.filter((s) => s.id !== sensor.id);
+  async remove(id: string): Promise<void> {
+    const sensor = await this.findOne(id);
+    await this.temperatureSensorRepository.remove(sensor);
   }
 }

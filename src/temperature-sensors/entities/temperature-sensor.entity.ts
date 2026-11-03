@@ -28,6 +28,12 @@ export class TemperatureSensor {
   })
   unit: string;
 
+  @Column({
+    type: 'timestamptz',
+    nullable: true,
+  })
+  timestamp: Date;
+
   @CreateDateColumn({
     type: 'timestamptz',
   })

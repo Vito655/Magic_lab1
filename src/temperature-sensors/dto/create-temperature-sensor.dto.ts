@@ -16,5 +16,6 @@ export class CreateTemperatureSensorDto {
   unit: string;
 
   @IsOptional()
+  @Type(() => Date)
   timestamp?: Date;
 }
