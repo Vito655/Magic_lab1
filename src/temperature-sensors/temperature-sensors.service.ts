@@ -8,15 +8,17 @@ import { v4 as uuidv4 } from 'uuid';
 export class TemperatureSensorsService {
   private sensors: TemperatureSensor[] = [];
 
-  create(createSensorDto: CreateTemperatureSensorDto): TemperatureSensor {
-    const sensor: TemperatureSensor = {
-      id: uuidv4(),
-      timestamp: new Date(),
-      ...createSensorDto,
-    };
-    this.sensors.push(sensor);
-    return sensor;
-  }
+create(createSensorDto: CreateTemperatureSensorDto): TemperatureSensor {
+  const sensor: TemperatureSensor = {
+    id: uuidv4(),
+    timestamp: new Date(),
+    createdAt: new Date(),
+    ...createSensorDto,
+  };
+  this.sensors.push(sensor);
+  return sensor;
+}
+
 
   findAll(): TemperatureSensor[] {
     return this.sensors;

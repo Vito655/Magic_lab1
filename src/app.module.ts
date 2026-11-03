@@ -1,25 +1,34 @@
 import { Module } from '@nestjs/common';
-import { createObserveModule } from '@nestjs/observe';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TemperatureSensorsModule } from './temperature-sensors/temperature-sensors.module';
+import { TemperatureSensor } from './temperature-sensors/entities/temperature-sensor.entity';
 import { LightModule } from './sensor/light/light.module';
-
-export const { ObserveModule, ObserveInstrument } = createObserveModule();
-
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 @Module({
-  imports: [
-    // Distributed tracing, auto-correlated logs, request/job metrics, error
-    // telemetry, alarms, and more — out of the box. Sign up at https://observe.nestjs.com
-    ObserveModule.forRoot({
-      appKey: 'YOUR_APP_KEY',
-      appSecret: 'YOUR_APP_SECRET',
-      serviceId: 'magic',
-    }),
-    TemperatureSensorsModule,
-    LightModule,
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+ imports: [
+ TypeOrmModule.forRootAsync({
+ imports: [ConfigModule],
+ useFactory: (configService: ConfigService) => ({
+ type: 'postgres',
+ host: configService.get<string>('DB_HOST'),
+ port: configService.get<number>('DB_PORT'),
+ username: configService.get<string>('DB_USERNAME'),
+ password: configService.get<string>('DB_PASSWORD'),
+ database: configService.get<string>('DB_NAME'),
+ entities: [TemperatureSensor],
+ synchronize: true,
+ ssl: {
+ rejectUnauthorized: false,
+ },
+ }),
+ inject: [ConfigService],
+ }),
+ TemperatureSensorsModule,
+ LightModule,
+ ],
+ controllers: [AppController],
+ providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {} 

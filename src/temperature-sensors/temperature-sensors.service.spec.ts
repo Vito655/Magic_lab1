@@ -1,18 +1,24 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { TemperatureSensorsService } from './temperature-sensors.service';
-
-describe('TemperatureSensorsService', () => {
-  let service: TemperatureSensorsService;
-
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [TemperatureSensorsService],
-    }).compile();
-
-    service = module.get<TemperatureSensorsService>(TemperatureSensorsService);
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-});
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { TemperatureSensor } from './entities/temperature-sensor.entity';
+import { CreateTemperatureSensorDto } from './dto/create-temperature-sensor.dto';
+@Injectable()
+export class TemperatureSensorsService {
+ constructor(
+ @InjectRepository(TemperatureSensor)
+ private readonly temperatureSensorRepository:
+Repository<TemperatureSensor>,
+ ) {}
+ async create(createDto: CreateTemperatureSensorDto) {
+ const record =
+this.temperatureSensorRepository.create(createDto);
+ return await this.temperatureSensorRepository.save(record);
+ }
+ async findAll() {
+ return await this.temperatureSensorRepository.find({
+ order: { createdAt: 'DESC' },
+ take: 50,
+ });
+ }
+} 
