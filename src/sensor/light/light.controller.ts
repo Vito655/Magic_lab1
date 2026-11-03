@@ -19,7 +19,7 @@ export class LightController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.lightService.findOne(id); // Прибрали +
+    return this.lightService.findOne(id);
   }
 
   @Patch(':id')
@@ -29,6 +29,6 @@ export class LightController {
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.lightService.remove(id); // Прибрали +
+    return this.lightService.remove(id);
   }
 }
