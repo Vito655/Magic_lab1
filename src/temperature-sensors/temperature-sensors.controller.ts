@@ -15,7 +15,6 @@ this.temperatureSensorsService.create(createTemperatureSensorDto);
  }
  @Get()
  findAll() {
-7
  return this.temperatureSensorsService.findAll();
  }
 } 
