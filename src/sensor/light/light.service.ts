@@ -4,17 +4,33 @@ import { Repository } from 'typeorm';
 import { LightSensor } from './entities/light.entity';
 import { CreateLightDto } from './dto/create-light.dto';
 import { UpdateLightDto } from './dto/update-light.dto';
+import { LightAlertsService } from './light-alerts.service';
 
 @Injectable()
 export class LightService {
+  private readonly CRITICAL_TEMP = 100; 
   constructor(
     @InjectRepository(LightSensor)
     private readonly lightRepository: Repository<LightSensor>,
+    private readonly alertsService: LightAlertsService, 
   ) {}
 
   async create(createLightDto: CreateLightDto): Promise<LightSensor> {
     const lightRecord = this.lightRepository.create(createLightDto);
-    return await this.lightRepository.save(lightRecord);
+    const saved = await this.lightRepository.save(lightRecord); 
+
+    if (saved.value <= this.CRITICAL_TEMP) {
+      this.alertsService.emitAlert({
+        message: `Critical temperature! Value ${saved.value}
+        ${saved.unit}`,
+        temperature: saved.value,
+        sensorName: saved.sensorName,
+        timestamp: saved.timestamp,
+        severity: 'critical',
+      });
+    } 
+
+    return saved
   }
 
   async findAll(): Promise<LightSensor[]> {
