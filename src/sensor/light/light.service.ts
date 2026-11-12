@@ -8,7 +8,7 @@ import { LightAlertsService } from './light-alerts.service';
 
 @Injectable()
 export class LightService {
-  private readonly CRITICAL_TEMP = 100; 
+  private readonly CRITICAL_LIGHT = 1000; 
   constructor(
     @InjectRepository(LightSensor)
     private readonly lightRepository: Repository<LightSensor>,
@@ -19,9 +19,9 @@ export class LightService {
     const lightRecord = this.lightRepository.create(createLightDto);
     const saved = await this.lightRepository.save(lightRecord); 
 
-    if (saved.value <= this.CRITICAL_TEMP) {
+    if (saved.value <= this.CRITICAL_LIGHT) {
       this.alertsService.emitAlert({
-        message: `Critical temperature! Value ${saved.value}
+        message: `Critical Light level! Value ${saved.value}
         ${saved.unit}`,
         temperature: saved.value,
         sensorName: saved.sensorName,
