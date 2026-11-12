@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Sse, MessageEvent} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Sse, MessageEvent } from '@nestjs/common';
 import { LightService } from './light.service';
 import { CreateLightDto } from './dto/create-light.dto';
 import { UpdateLightDto } from './dto/update-light.dto';
 import { LightAlertsService } from './light-alerts.service';
-import { Observable, map } from 'rxjs'; 
+import { Observable, map } from 'rxjs';
 
 @Controller('light')
 export class LightController {
@@ -11,7 +11,6 @@ export class LightController {
     private readonly lightService: LightService,
     private readonly alertsService: LightAlertsService,
   ) {}
-  
 
   @Post()
   create(@Body() createLightDto: CreateLightDto) {
@@ -21,6 +20,16 @@ export class LightController {
   @Get()
   findAll() {
     return this.lightService.findAll();
+  }
+
+  // Ставимо потік сповіщень ДО маршруту ':id', щоб слово 'alerts' не сприймалося як ID
+  @Sse('alerts')
+  alerts(): Observable<MessageEvent> {
+    return this.alertsService.getAlertStream().pipe(
+      map((alert) => ({
+        data: alert,
+      })),
+    );
   }
 
   @Get(':id')
@@ -37,13 +46,4 @@ export class LightController {
   remove(@Param('id') id: string) {
     return this.lightService.remove(id);
   }
-
-  @Sse('alerts')
-    alerts(): Observable<MessageEvent> {
-      return this.alertsService.getAlertStream().pipe(
-        map((alert) => ({
-          data: alert,
-        })),
-      ); 
-    }
 }
