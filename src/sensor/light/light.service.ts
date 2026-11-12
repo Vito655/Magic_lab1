@@ -34,7 +34,7 @@ export class LightService {
   }
 
   async findAll(): Promise<LightSensor[]> {
-    return await this.lightRepository.find();
+    return await this.lightRepository.find({ order: { createdAt: 'DESC' }, take: 50,});
   }
 
   async findOne(id: string): Promise<LightSensor> {
