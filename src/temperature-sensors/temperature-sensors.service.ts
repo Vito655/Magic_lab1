@@ -4,23 +4,35 @@ import { Repository } from 'typeorm';
 import { TemperatureSensor } from './entities/temperature-sensor.entity';
 import { CreateTemperatureSensorDto } from './dto/create-temperature-sensor.dto';
 import { UpdateTemperatureSensorDto } from './dto/update-temperature-sensor.dto';
-
+import { TemperatureAlertsService } from './temperature-alerts.service';
 @Injectable()
 export class TemperatureSensorsService {
+  private readonly CRITICAL_TEMP = -10; 
   constructor(
     @InjectRepository(TemperatureSensor)
     private readonly temperatureSensorRepository: Repository<TemperatureSensor>,
+    private readonly alertsService: TemperatureAlertsService, 
   ) {}
 
   async create(createSensorDto: CreateTemperatureSensorDto): Promise<TemperatureSensor> {
-    // TypeORM створить сутність з урахуванням переданого timestamp (якщо він є) 
-    // та автоматично згенерує id та createdAt
     const sensor = this.temperatureSensorRepository.create(createSensorDto);
-    return await this.temperatureSensorRepository.save(sensor);
+    const saved = await this.temperatureSensorRepository.save(sensor); 
+
+    if (saved.value <= this.CRITICAL_TEMP) {
+      this.alertsService.emitAlert({
+        message: `Critical temperature! Value ${saved.value}
+        ${saved.unit}`,
+        temperature: saved.value,
+        sensorName: saved.sensorName,
+        timestamp: saved.timestamp,
+        severity: 'critical',
+      });
+    } 
+    return saved
   }
 
   async findAll(): Promise<TemperatureSensor[]> {
-    return await this.temperatureSensorRepository.find();
+    return await this.temperatureSensorRepository.find({ order: { createdAt: 'DESC' }, take: 50,});
   }
 
   async findOne(id: string): Promise<TemperatureSensor> {
